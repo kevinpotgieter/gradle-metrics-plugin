@@ -1,9 +1,10 @@
 plugins {
+    id 'com.gradle.plugin-publish' version '0.9.6'
     id 'idea'
     id 'java'
     id 'java-gradle-plugin'
     id 'groovy'
-    id 'pl.allegro.tech.build.axion-release' version '1.3.4'
+    id 'pl.allegro.tech.build.axion-release' version '1.4.1'
 }
 
 group 'uk.bluedawnsolutions.gradle'
@@ -20,7 +21,7 @@ scmVersion {
 project.version = scmVersion.version
 
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
