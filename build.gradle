@@ -1,0 +1,52 @@
+plugins {
+    id 'idea'
+    id 'java'
+    id 'java-gradle-plugin'
+    id 'groovy'
+    id 'pl.allegro.tech.build.axion-release' version '1.3.4'
+}
+
+group 'uk.bluedawnsolutions.gradle'
+
+// axion-release
+project.ext.setProperty('release.disableChecks', 'true')
+project.ext.setProperty('release.pushTagsOnly', 'true')
+scmVersion {
+    tag {
+        prefix = project.name
+    }
+    versionIncrementer 'incrementMinor'
+}
+project.version = scmVersion.version
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile localGroovy()
+    compile group: 'io.dropwizard.metrics', name: 'metrics-core', version: '3.1.2'
+
+    testCompile gradleTestKit()
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile ('org.spockframework:spock-core:1.0-groovy-2.4') {
+        exclude module: 'groovy-all'
+    }
+}
+
+gradlePlugin {
+    testSourceSets sourceSets.test
+
+    plugins {
+        metricsPlugin {
+            id = "uk.bluedawnsolutions.gradle.metrics-plugin"
+            implementationClass = "uk.bluedawnsolutions.gradle.MetricsPlugin"
+        }
+    }
+}
+
+
+task wrapper(type: Wrapper) {
+    // Do not for any reason downgrade this past 2.13, otherwise we lose the gradle plugin development goodness
+    gradleVersion = '2.14.1'
+}
