@@ -7,8 +7,6 @@ class MetricsPluginExtension {
     def graphiteHost = "localhost"
     def graphitePort = 2003
 
-
-
     private static final getHostname(){
         try {
             return InetAddress.getLocalHost().getHostName().replaceAll("\\.", "-");
