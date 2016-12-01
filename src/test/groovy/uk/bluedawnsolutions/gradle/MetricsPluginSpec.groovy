@@ -24,6 +24,10 @@ class MetricsPluginSpec extends Specification {
         //testing....
 
         println "buildFile = $buildFile"
+    }
+
+    def "Build should still pass with no configuration"() {
+        given:
         buildFile.newWriter().withWriter { w ->
             w << """
             plugins {
@@ -38,10 +42,6 @@ class MetricsPluginSpec extends Specification {
         """
         }
 
-    }
-
-    def "Build should still pass with no configuration"() {
-
         when:
         def result = gradle("tempTask")
 
@@ -49,12 +49,12 @@ class MetricsPluginSpec extends Specification {
         result.task(":tempTask").outcome == TaskOutcome.SUCCESS
     }
 
-
     private BuildResult gradle(String... args) {
         logResult(GradleRunner.create()
                 .withProjectDir(testProjectDir.root)
                 .withArguments(*args)
                 .forwardOutput()
+                .withDebug(true)
                 .withPluginClasspath()
                 .build())
     }
