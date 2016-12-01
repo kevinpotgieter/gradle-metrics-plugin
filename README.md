@@ -26,6 +26,18 @@ buildMetrics {
 
 Typically, the only configuration you need to supply is a value for the `graphiteHost`
 
+## Published metrics
+
+#### Counters
+ - Number of Project builds
+ - Number of Project successful builds
+ - Number of Project failure builds
+
+#### Timers
+ - Every task executed in the build
+ 
+
+
 ## Building and releasing.
 `./gradlew build release`
 `./gradlew publishPlugins`
