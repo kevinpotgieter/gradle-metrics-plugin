@@ -56,7 +56,7 @@ task wrapper(type: Wrapper) {
 // The configuration example below shows the minimum required properties
 // configured to publish your plugin to the plugin portal
 pluginBundle {
-    website = 'http://www.gradle.org/'
+    website = 'https://github.com/kevinpotgieter/gradle-metrics-plugin'
     vcsUrl = 'https://github.com/kevinpotgieter/gradle-metrics-plugin'
     description = 'A plugin capable of publishing metrics about the time taken for tasks as well as number of build successes and failures.'
     tags = ['build', 'metrics']
