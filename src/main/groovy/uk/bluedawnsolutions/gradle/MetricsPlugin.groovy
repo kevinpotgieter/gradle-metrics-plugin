@@ -10,10 +10,15 @@ import org.gradle.api.Task
 import org.gradle.api.tasks.TaskState
 
 class MetricsPlugin implements Plugin<Project> {
+
     private MetricRegistry metricRegistry = new MetricRegistry()
 
     @Override
     void apply(Project project) {
+        final GString BUILD_FAILURE_METRIC_NAME = "${project.name}.build.failure"
+        final GString BUILD_SUCCESS_METRIC_NAME = "${project.name}.build.success"
+        final GString BUILD_TOTAL_COUNT_METRIC_NAME = "${project.name}.build.total"
+
         project.configure(project) {
             extensions.create("buildMetrics",
                     MetricsPluginExtension)
@@ -24,14 +29,17 @@ class MetricsPlugin implements Plugin<Project> {
         }
 
         project.gradle.taskGraph.afterTask { Task task, TaskState state ->
-            metricRegistry.timer(getMetricNameFromTask(task)).time().stop()
+            metricRegistry.timers.get(getMetricNameFromTask(task)).time().stop()
         }
 
         project.gradle.buildFinished { BuildResult buildResult ->
+            metricRegistry.counter(BUILD_TOTAL_COUNT_METRIC_NAME).inc()
+            //register the success and error counters
+            metricRegistry.counter(BUILD_FAILURE_METRIC_NAME).inc(0)
+            metricRegistry.counter(BUILD_SUCCESS_METRIC_NAME).inc(0)
 
-            metricRegistry.counter("${project.name}.build.total").inc()
-            buildResult.failure ? metricRegistry.counter("${project.name}.build.failure").inc()
-                    : metricRegistry.counter("${project.name}.build.success").inc()
+            buildResult.failure ? metricRegistry.counter(BUILD_FAILURE_METRIC_NAME).inc()
+                    : metricRegistry.counter(BUILD_SUCCESS_METRIC_NAME).inc()
 
             def metricsPrefix = project.buildMetrics.metricsPrefix
             def graphiteHost = project.buildMetrics.graphiteHost
@@ -41,13 +49,13 @@ class MetricsPlugin implements Plugin<Project> {
 
             GraphiteReporter metricReporter = GraphiteReporter.forRegistry(metricRegistry)
                     .prefixedWith(metricsPrefix)
-                    .build(new Graphite(graphiteHost, graphitePort))
+                    .build(new Graphite(hostname: graphiteHost, port: graphitePort))
 
             metricReporter.report()
         }
     }
 
-    String getMetricNameFromTask(Task task) {
+    static String getMetricNameFromTask(Task task) {
         "${task.project.name}.${task.name}.duration"
     }
 

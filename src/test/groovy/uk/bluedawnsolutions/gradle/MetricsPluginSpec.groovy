@@ -6,6 +6,7 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
+import spock.lang.Unroll
 
 
 class MetricsPluginSpec extends Specification {
@@ -52,7 +53,8 @@ class MetricsPluginSpec extends Specification {
         result.task(":tempTask").outcome == TaskOutcome.SUCCESS
     }
 
-    def "Build should publish metrics to Graphite"() {
+    @Unroll
+    def "Expect the following metric pattern: '#expectedMetricName' to be published to Graphite after the build completes"(def expectedMetricName) {
         given:
         buildFile.newWriter().withWriter { w ->
             w << """
@@ -76,8 +78,13 @@ class MetricsPluginSpec extends Specification {
         gradle("tempTask")
 
         then:
-        def expectedMetricName = /gradle\.build\..*\..*.build.success.count/
         graphiteMockServer.verifyMetricReceived(expectedMetricName)
+
+        where:
+        expectedMetricName << [
+                /gradle\.build\..*\..*.build.success.count/,
+                /gradle\.build\..*\..*.build.total.count/
+        ]
     }
 
     private BuildResult gradle(String... args) {
