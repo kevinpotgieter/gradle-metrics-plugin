@@ -13,6 +13,9 @@ class MetricsPluginSpec extends Specification {
     @Rule
     final TemporaryFolder testProjectDir = new TemporaryFolder()
 
+    @Rule
+    final GraphiteMockServer graphiteMockServer = new GraphiteMockServer()
+
     String projectName
     File buildFile
 
@@ -47,6 +50,34 @@ class MetricsPluginSpec extends Specification {
 
         then:
         result.task(":tempTask").outcome == TaskOutcome.SUCCESS
+    }
+
+    def "Build should publish metrics to Graphite"() {
+        given:
+        buildFile.newWriter().withWriter { w ->
+            w << """
+            plugins {
+                id 'uk.bluedawnsolutions.gradle.metrics-plugin'
+            }
+
+            buildMetrics{
+                graphitePort = ${graphiteMockServer.port}
+            }
+
+            task tempTask {
+                doLast {
+                    println "We've run the task!"
+                }
+            }
+        """
+        }
+
+        when:
+        gradle("tempTask")
+
+        then:
+        def expectedMetricName = /gradle\.build\..*\..*.build.success.count/
+        graphiteMockServer.verifyMetricReceived(expectedMetricName)
     }
 
     private BuildResult gradle(String... args) {
