@@ -83,7 +83,9 @@ class MetricsPluginSpec extends Specification {
         where:
         expectedMetricName << [
                 /gradle\.build\..*\..*.build.success.count/,
-                /gradle\.build\..*\..*.build.total.count/
+                /gradle\.build\..*\..*.build.total.count/,
+                /gradle\.build\..*\.tasks\.tempTask\.duration/
+
         ]
     }
 

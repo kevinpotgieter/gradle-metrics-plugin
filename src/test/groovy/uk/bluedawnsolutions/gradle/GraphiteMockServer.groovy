@@ -67,7 +67,7 @@ class GraphiteMockServer extends ExternalResource implements Runnable {
     }
 
     public def verifyMetricReceived(def regex) {
-        await().atMost(500, TimeUnit.MILLISECONDS).until {
+        await("Locating metric name with patterrn: ${regex}").atMost(500, TimeUnit.MILLISECONDS).until {
             def keys = COLLECTED_METRICS.keySet().findAll { key ->
                 key ==~ regex
             }

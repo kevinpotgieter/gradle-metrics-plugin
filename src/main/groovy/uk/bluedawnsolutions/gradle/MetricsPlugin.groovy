@@ -1,5 +1,6 @@
 package uk.bluedawnsolutions.gradle
 
+import com.codahale.metrics.Gauge
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.graphite.Graphite
 import com.codahale.metrics.graphite.GraphiteReporter
@@ -25,11 +26,28 @@ class MetricsPlugin implements Plugin<Project> {
         }
 
         project.gradle.taskGraph.beforeTask { Task task ->
-            metricRegistry.timer(getMetricNameFromTask(task))
+            metricRegistry.register(getMetricNameFromTask(task), new Gauge<Long>() {
+                private final Long startMillis = System.currentTimeMillis()
+                private Long stopMillis;
+
+                void stop() {
+                    stopMillis = System.currentTimeMillis();
+                }
+
+                /**
+                 * Returns the metric's current value.
+                 *
+                 * @return the metric's current value
+                 */
+                @Override
+                Long getValue() {
+                    return stopMillis - startMillis;
+                }
+            })
         }
 
         project.gradle.taskGraph.afterTask { Task task, TaskState state ->
-            metricRegistry.timers.get(getMetricNameFromTask(task)).time().stop()
+            metricRegistry.gauges.get(getMetricNameFromTask(task)).stop()
         }
 
         project.gradle.buildFinished { BuildResult buildResult ->
@@ -49,14 +67,14 @@ class MetricsPlugin implements Plugin<Project> {
 
             GraphiteReporter metricReporter = GraphiteReporter.forRegistry(metricRegistry)
                     .prefixedWith(metricsPrefix)
-                    .build(new Graphite(hostname: graphiteHost, port: graphitePort))
+                    .build(new Graphite(graphiteHost, graphitePort))
 
             metricReporter.report()
         }
     }
 
     static String getMetricNameFromTask(Task task) {
-        "${task.project.name}.${task.name}.duration"
+        "${task.project.name}.tasks.${task.name}.duration"
     }
 
 }
